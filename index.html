@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turf Cricket Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    .custom-map {
+        height: 300px;
+        background: #e5e7eb;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+    }
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+    .calendar-day {
+        aspect-ratio: 1/1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+    }
+    .calendar-day.has-event::after {
+        content: '';
+        position: absolute;
+        bottom: 4px;
+        width: 4px;
+        height: 4px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+    .time-slot {
+        transition: all 0.2s ease;
+    }
+    .time-slot:hover {
+        transform: translateY(-2px);
+    }
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    #teamFormation .player-card {
+        cursor: grab;
+    }
+    #teamFormation .player-card:active {
+        cursor: grabbing;
+    }
+    .team-container {
+        min-height: 200px;
+    }
+</style>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Login Section -->
+        <div id="loginSection" class="container mx-auto px-4 py-8">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-center mb-6">Turf Cricket Management System</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">User ID</label>
+                        <input type="text" id="employeeId" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Login As</label>
+                        <select id="userType" class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                            <option value="player">Player</option>
+                            <option value="admin">Admin</option>
+                            <option value="captain">Captain</option>
+                            <option value="scorer">Scorer</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Login</button>
+                    <div class="text-center mt-4">
+                        <a href="#" onclick="showRegisterForm()" class="text-blue-600 hover:text-blue-800">New player? Register here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div id="registrationSection" class="container mx-auto px-4 py-8 hidden">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-center mb-6">Player Registration</h2>
+                <form id="registrationForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" id="fullName" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" id="phone" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Create Password</label>
+                        <input type="password" id="newPassword" class="mt-1 block w-full rounded-md border border-gray-300 p-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Skill Level</label>
+                        <select id="skillLevel" class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="professional">Professional</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Preferred Position</label>
+                        <select id="preferredPosition" class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                            <option value="batsman">Batsman</option>
+                            <option value="bowler">Bowler</option>
+                            <option value="allrounder">All-rounder</option>
+                            <option value="wicketkeeper">Wicketkeeper</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700">Register</button>
+                    <div class="text-center mt-4">
+                        <a href="#" onclick="backToLogin()" class="text-blue-600 hover:text-blue-800">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Player Dashboard -->
+        <div id="playerDashboard" class="container mx-auto px-4 py-8 hidden">
+            <!-- Navigation -->
+            <nav class="bg-white shadow-md mb-6 rounded-lg">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center">
+                                <h1 class="text-xl font-bold text-gray-800">Turf Cricket Management</h1>
+                            </div>
+                            <div class="hidden md:ml-6 md:flex md:space-x-4">
+                                <button onclick="showPlayerSection('bookings')" class="player-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Bookings</button>
+                                <button onclick="showPlayerSection('statistics')" class="player-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Statistics</button>
+                                <button onclick="showPlayerSection('payments')" class="player-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Payments</button>
+                                <button onclick="showPlayerSection('profile')" class="player-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Profile</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div id="playerName" class="mr-3 text-sm text-gray-700">Player Name</div>
+                            <button onclick="logout()" class="bg-red-600 text-white px-4 py-1 rounded-md text-sm hover:bg-red-700">Logout</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile navigation -->
+                <div class="md:hidden flex overflow-x-auto space-x-4 p-2">
+                    <button onclick="showPlayerSection('bookings')" class="player-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Bookings</button>
+                    <button onclick="showPlayerSection('statistics')" class="player-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Statistics</button>
+                    <button onclick="showPlayerSection('payments')" class="player-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Payments</button>
+                    <button onclick="showPlayerSection('profile')" class="player-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Profile</button>
+                </div>
+            </nav>
+
+            <!-- Player Bookings Section -->
+            <div id="playerBookingsSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Turf Bookings</h2>
+                    <button onclick="showBookingForm()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">New Booking</button>
+                </div>
+                
+                <!-- Calendar -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">November 2023</h3>
+                        <div class="flex space-x-2">
+                            <button class="p-1 rounded hover:bg-gray-100"><i class="bi bi-chevron-left"></i></button>
+                            <button class="p-1 rounded hover:bg-gray-100"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 mb-2 text-center">
+                        <div class="text-sm font-medium text-gray-500">Sun</div>
+                        <div class="text-sm font-medium text-gray-500">Mon</div>
+                        <div class="text-sm font-medium text-gray-500">Tue</div>
+                        <div class="text-sm font-medium text-gray-500">Wed</div>
+                        <div class="text-sm font-medium text-gray-500">Thu</div>
+                        <div class="text-sm font-medium text-gray-500">Fri</div>
+                        <div class="text-sm font-medium text-gray-500">Sat</div>
+                    </div>
+                    <div class="calendar-grid">
+                        <!-- Sample calendar days -->
+                        <div class="calendar-day text-gray-400">29</div>
+                        <div class="calendar-day text-gray-400">30</div>
+                        <div class="calendar-day text-gray-400">31</div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day">2</div>
+                        <div class="calendar-day has-event">3</div>
+                        <div class="calendar-day">4</div>
+                        <div class="calendar-day">5</div>
+                        <div class="calendar-day has-event">6</div>
+                        <div class="calendar-day">7</div>
+                        <div class="calendar-day">8</div>
+                        <div class="calendar-day has-event">9</div>
+                        <div class="calendar-day">10</div>
+                        <div class="calendar-day">11</div>
+                        <div class="calendar-day">12</div>
+                        <div class="calendar-day">13</div>
+                        <div class="calendar-day bg-blue-100 border border-blue-300 font-medium">14</div>
+                        <div class="calendar-day">15</div>
+                        <div class="calendar-day">16</div>
+                        <div class="calendar-day">17</div>
+                        <div class="calendar-day has-event">18</div>
+                        <div class="calendar-day">19</div>
+                        <div class="calendar-day">20</div>
+                        <div class="calendar-day">21</div>
+                        <div class="calendar-day">22</div>
+                        <div class="calendar-day">23</div>
+                        <div class="calendar-day">24</div>
+                        <div class="calendar-day">25</div>
+                        <div class="calendar-day">26</div>
+                        <div class="calendar-day">27</div>
+                        <div class="calendar-day">28</div>
+                        <div class="calendar-day">29</div>
+                        <div class="calendar-day">30</div>
+                        <div class="calendar-day text-gray-400">1</div>
+                        <div class="calendar-day text-gray-400">2</div>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">Your Upcoming Bookings</h3>
+                <div class="space-y-4">
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between">
+                            <div>
+                                <h4 class="font-semibold">Evening T20 Match</h4>
+                                <p class="text-sm text-gray-600">Friday, Nov 3, 2023</p>
+                                <p class="text-sm text-gray-600">6:00 PM - 9:00 PM</p>
+                                <p class="text-sm text-gray-600">Turf 2</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Confirmed</span>
+                                <p class="text-sm mt-2">12 players confirmed</p>
+                                <button class="mt-2 text-sm text-blue-600 hover:text-blue-800">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div class="flex justify-between">
+                            <div>
+                                <h4 class="font-semibold">Weekend Practice Session</h4>
+                                <p class="text-sm text-gray-600">Monday, Nov 6, 2023</p>
+                                <p class="text-sm text-gray-600">4:00 PM - 6:00 PM</p>
+                                <p class="text-sm text-gray-600">Turf 1</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Payment Pending</span>
+                                <p class="text-sm mt-2">8 players confirmed</p>
+                                <button class="mt-2 text-sm text-blue-600 hover:text-blue-800">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Statistics Section -->
+            <div id="playerStatisticsSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+                <h2 class="text-2xl font-bold mb-6">My Statistics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="stat-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                        <div class="text-blue-500 mb-2"><i class="bi bi-trophy text-2xl"></i></div>
+                        <h3 class="text-lg font-semibold text-blue-700">Matches</h3>
+                        <p class="text-3xl font-bold">24</p>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                        <div class="text-green-500 mb-2"><i class="bi bi-graph-up text-2xl"></i></div>
+                        <h3 class="text-lg font-semibold text-green-700">Runs</h3>
+                        <p class="text-3xl font-bold">367</p>
+                        <p class="text-sm text-green-600">Avg: 26.2</p>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                        <div class="text-purple-500 mb-2"><i class="bi bi-lightning-charge text-2xl"></i></div>
+                        <h3 class="text-lg font-semibold text-purple-700">Wickets</h3>
+                        <p class="text-3xl font-bold">18</p>
+                        <p class="text-sm text-purple-600">Econ: 6.7</p>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+                        <div class="text-orange-500 mb-2"><i class="bi bi-star text-2xl"></i></div>
+                        <h3 class="text-lg font-semibold text-orange-700">Performance</h3>
+                        <p class="text-3xl font-bold">7.8</p>
+                        <p class="text-sm text-orange-600">Last 5 matches: 8.2</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Performances</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Match</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batting</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bowling</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Result</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">28 Oct</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">Team A vs Team B</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">42 (28)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">2/24 (3)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800"><span class="text-green-600">Won</span></td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">8.5</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">22 Oct</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">Team C vs Team D</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">18 (14)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">1/18 (2)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800"><span class="text-red-600">Lost</span></td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">7.2</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">15 Oct</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">Team B vs Team D</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">67 (45)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">0/32 (4)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800"><span class="text-green-600">Won</span></td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">8.8</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">08 Oct</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">Team A vs Team C</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">12 (10)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">3/19 (4)</td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800"><span class="text-green-600">Won</span></td>
+                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-800">8.0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Performance Trends</h3>
+                    <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <p class="text-gray-500">Performance graph visualization would appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Payments Section -->
+            <div id="playerPaymentsSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+                <h2 class="text-2xl font-bold mb-6">Payments & Billing</h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0 text-blue-500">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                You have <span class="font-semibold">2 pending payments</span> totaling <span class="font-semibold">$45.00</span>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Payment History</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">Nov 6, 2023</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Weekend Practice Session</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">$25.00</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Pending</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700">Pay Now</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">Nov 3, 2023</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Evening T20 Match</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">$20.00</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Pending</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700">Pay Now</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">Oct 28, 2023</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Saturday Night League</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">$30.00</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Paid</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                                        <button class="text-blue-600 hover:text-blue-800 text-xs">View Receipt</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">Oct 22, 2023</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Sunday Morning Practice</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">$15.00</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Paid</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                                        <button class="text-blue-600 hover:text-blue-800 text-xs">View Receipt</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Payment Methods</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="bg-gray-100 p-2 rounded-md mr-3">
+                                        <i class="bi bi-credit-card text-gray-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold">Visa ending in 4242</p>
+                                        <p class="text-sm text-gray-600">Expires 12/25</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Default</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-dashed border-gray-300 rounded-lg p-4 flex items-center justify-center">
+                            <button class="text-blue-600 hover:text-blue-800 flex items-center">
+                                <i class="bi bi-plus-circle mr-2"></i>
+                                Add Payment Method
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Profile Section -->
+            <div id="playerProfileSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6 hidden">
+                <h2 class="text-2xl font-bold mb-6">My Profile</h2>
+                
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/4">
+                        <div class="bg-gray-100 rounded-lg p-6 text-center">
+                            <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <i class="bi bi-person text-4xl text-gray-500"></i>
+                            </div>
+                            <h3 class="font-bold text-lg mb-1">John Smith</h3>
+                            <p class="text-gray-600 mb-4">All-Rounder</p>
+                            <div class="flex justify-center space-x-2 mb-4">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">Intermediate</span>
+                            </div>
+                            <button class="text-sm text-blue-600 hover:text-blue-800">Change Photo</button>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-3/4">
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                    <input type="text" value="John Smith" class="w-full rounded-md border border-gray-300 p-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input type="email" value="john.smith@example.com" class="w-full rounded-md border border-gray-300 p-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                    <input type="tel" value="(555) 123-4567" class="w-full rounded-md border border-gray-300 p-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                    <input type="date" value="1990-05-15" class="w-full rounded-md border border-gray-300 p-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Position</label>
+                                    <select class="w-full rounded-md border border-gray-300 p-2">
+                                        <option>Batsman</option>
+                                        <option>Bowler</option>
+                                        <option selected>All-Rounder</option>
+                                        <option>Wicketkeeper</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Skill Level</label>
+                                    <select class="w-full rounded-md border border-gray-300 p-2">
+                                        <option>Beginner</option>
+                                        <option selected>Intermediate</option>
+                                        <option>Advanced</option>
+                                        <option>Professional</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                                <textarea class="w-full rounded-md border border-gray-300 p-2" rows="3">Cricket enthusiast with 5 years of playing experience. Specializes in medium-pace bowling and middle-order batting.</textarea>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold mb-2">Notification Preferences</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="emailNotify" class="mr-2" checked>
+                                        <label for="emailNotify" class="text-sm text-gray-700">Receive email notifications</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="smsNotify" class="mr-2" checked>
+                                        <label for="smsNotify" class="text-sm text-gray-700">Receive SMS notifications</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="matchReminders" class="mr-2" checked>
+                                        <label for="matchReminders" class="text-sm text-gray-700">Match reminders (24 hours before)</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden">
+            <!-- Navigation -->
+            <nav class="bg-white shadow-md mb-6 rounded-lg">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center">
+                                <h1 class="text-xl font-bold text-gray-800">Turf Cricket Admin</h1>
+                            </div>
+                            <div class="hidden md:ml-6 md:flex md:space-x-4">
+                                <button onclick="showAdminSection('dashboard')" class="admin-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Overview</button>
+                                <button onclick="showAdminSection('bookings')" class="admin-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Bookings</button>
+                                <button onclick="showAdminSection('attendance')" class="admin-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Attendance</button>
+                                <button onclick="showAdminSection('teams')" class="admin-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Teams</button>
+                                <button onclick="showAdminSection('reports')" class="admin-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Reports</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="mr-3 text-sm text-gray-700">Admin</div>
+                            <button onclick="logout()" class="bg-red-600 text-white px-4 py-1 rounded-md text-sm hover:bg-red-700">Logout</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile navigation -->
+                <div class="md:hidden flex overflow-x-auto space-x-4 p-2">
+                    <button onclick="showAdminSection('dashboard')" class="admin-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Overview</button>
+                    <button onclick="showAdminSection('bookings')" class="admin-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Bookings</button>
+                    <button onclick="showAdminSection('attendance')" class="admin-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Attendance</button>
+                    <button onclick="showAdminSection('teams')" class="admin-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Teams</button>
+                    <button onclick="showAdminSection('reports')" class="admin-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Reports</button>
+                </div>
+            </nav>
+
+            <!-- Admin Overview Section -->
+            <div id="adminOverviewSection" class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Total Bookings</p>
+                                <h3 class="text-2xl font-bold">48</h3>
+                                <p class="text-xs text-green-600">+12% from last month</p>
+                            </div>
+                            <div class="bg-blue-100 p-2 rounded-md text-blue-600">
+                                <i class="bi bi-calendar3 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Active Players</p>
+                                <h3 class="text-2xl font-bold">86</h3>
+                                <p class="text-xs text-green-600">+5 new this week</p>
+                            </div>
+                            <div class="bg-green-100 p-2 rounded-md text-green-600">
+                                <i class="bi bi-people text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Revenue</p>
+                                <h3 class="text-2xl font-bold">$2,568</h3>
+                                <p class="text-xs text-green-600">+8% from last month</p>
+                            </div>
+                            <div class="bg-purple-100 p-2 rounded-md text-purple-600">
+                                <i class="bi bi-currency-dollar text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Turf Utilization</p>
+                                <h3 class="text-2xl font-bold">78%</h3>
+                                <p class="text-xs text-green-600">+4% from last week</p>
+                            </div>
+                            <div class="bg-yellow-100 p-2 rounded-md text-yellow-600">
+                                <i class="bi bi-bar-chart text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow-md p-4 lg:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold">Booking Trends</h3>
+                            <div class="flex space-x-2">
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white">Week</button>
+                                <button class="px-2 py-1 text-xs border border-blue-500 text-blue-600 bg-blue-50 rounded-md">Month</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded-md bg-white">Year</button>
+                            </div>
+                        </div>
+                        <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <p class="text-gray-500">Booking trend chart would appear here</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold mb-4">Upcoming Sessions</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 text-blue-600 p-2 rounded-md mr-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Evening T20 Match</p>
+                                    <p class="text-sm text-gray-600">Today, 6:00 PM - 9:00 PM</p>
+                                </div>
+                                <div class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">12 players</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 text-blue-600 p-2 rounded-md mr-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Weekend Practice</p>
+                                    <p class="text-sm text-gray-600">Sat, 10:00 AM - 12:00 PM</p>
+                                </div>
+                                <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">8 players</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 text-blue-600 p-2 rounded-md mr-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Sunday League Match</p>
+                                    <p class="text-sm text-gray-600">Sun, 4:00 PM - 7:00 PM</p>
+                                </div>
+                                <div class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">14 players</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 text-blue-600 p-2 rounded-md mr-3">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Coaching Session</p>
+                                    <p class="text-sm text-gray-600">Mon, 5:00 PM - 6:30 PM</p>
+                                </div>
+                                <div class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">6 players</div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm py-2">View All Sessions</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold mb-4">Outstanding Payments</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">John Smith</p>
+                                        <p class="text-xs text-gray-500">3 sessions pending</p>
+                                    </div>
+                                </div>
+                                <div class="font-semibold">$45.00</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        MJ
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mike Johnson</p>
+                                        <p class="text-xs text-gray-500">2 sessions pending</p>
+                                    </div>
+                                </div>
+                                <div class="font-semibold">$30.00</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        SD
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Sarah Davis</p>
+                                        <p class="text-xs text-gray-500">1 session pending</p>
+                                    </div>
+                                </div>
+                                <div class="font-semibold">$15.00</div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        RP
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Robert Patel</p>
+                                        <p class="text-xs text-gray-500">4 sessions pending</p>
+                                    </div>
+                                </div>
+                                <div class="font-semibold">$60.00</div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm py-2">View All Payments</button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold mb-4">Top Performers</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        AR
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Alex Rodriguez</p>
+                                        <p class="text-xs text-gray-500">Batting Average: 42.5</p>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-100 px-2 py-1 rounded-full text-xs text-yellow-800 flex items-center">
+                                    <i class="bi bi-star-fill mr-1"></i>9.2
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        VP
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Vikram Patel</p>
+                                        <p class="text-xs text-gray-500">Bowling Economy: 5.8</p>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-100 px-2 py-1 rounded-full text-xs text-yellow-800 flex items-center">
+                                    <i class="bi bi-star-fill mr-1"></i>8.9
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        KM
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Kevin Martinez</p>
+                                        <p class="text-xs text-gray-500">All-Rounder Index: 7.8</p>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-100 px-2 py-1 rounded-full text-xs text-yellow-800 flex items-center">
+                                    <i class="bi bi-star-fill mr-1"></i>8.7
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                        JL
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Jessica Lee</p>
+                                        <p class="text-xs text-gray-500">Strike Rate: 152.6</p>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-100 px-2 py-1 rounded-full text-xs text-yellow-800 flex items-center">
+                                    <i class="bi bi-star-fill mr-1"></i>8.5
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm py-2">View All Players</button>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="font-semibold mb-4">Recent Activities</h3>
+                        <div class="space-y-4">
+                            <div class="flex">
+                                <div class="mr-3">
+                                    <div class="bg-blue-100 p-2 rounded-full text-blue-600">
+                                        <i class="bi bi-calendar-plus"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">New booking created</p>
+                                    <p class="text-xs text-gray-500">15 minutes ago</p>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="mr-3">
+                                    <div class="bg-green-100 p-2 rounded-full text-green-600">
+                                        <i class="bi bi-cash"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Payment received from Sarah</p>
+                                    <p class="text-xs text-gray-500">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="mr-3">
+                                    <div class="bg-yellow-100 p-2 rounded-full text-yellow-600">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">New player registration</p>
+                                    <p class="text-xs text-gray-500">5 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="mr-3">
+                                    <div class="bg-red-100 p-2 rounded-full text-red-600">
+                                        <i class="bi bi-x-circle"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Booking canceled</p>
+                                    <p class="text-xs text-gray-500">Yesterday at 4:30 PM</p>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="mr-3">
+                                    <div class="bg-purple-100 p-2 rounded-full text-purple-600">
+                                        <i class="bi bi-trophy"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Match results uploaded</p>
+                                    <p class="text-xs text-gray-500">Yesterday at 8:15 PM</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-full mt-4 text-blue-600 hover:text-blue-800 text-sm py-2">View All Activities</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Attendance Section -->
+            <div id="adminAttendanceSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Attendance Management</h2>
+                    <div class="flex space-x-2">
+                        <input type="date" class="border border-gray-300 rounded-md px-3 py-1 text-sm" value="2023-11-14">
+                        <button class="bg-blue-600 text-white px-4 py-1 rounded-md hover:bg-blue-700 text-sm">View</button>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0 text-blue-500">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Showing attendance for <span class="font-semibold">Evening T20 Match</span> on <span class="font-semibold">Tuesday, November 14, 2023</span>.
+                                Total expected players: <span class="font-semibold">12</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Player Check-In Status</h3>
+                        <div class="text-sm">
+                            <span class="inline-block w-4 h-4 bg-green-500 rounded-full mr-1"></span> Present: 8
+                            <span class="inline-block w-4 h-4 bg-yellow-500 rounded-full ml-3 mr-1"></span> Late: 1
+                            <span class="inline-block w-4 h-4 bg-red-500 rounded-full ml-3 mr-1"></span> Absent: 3
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-In Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-Out Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                                JS
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">John Smith</p>
+                                                <p class="text-xs text-gray-500">All-Rounder</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Present</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">5:50 PM</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">9:05 PM</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Turf 2</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">3.25</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="bi bi-pencil"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                                MJ
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Mike Johnson</p>
+                                                <p class="text-xs text-gray-500">Batsman</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Present</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">5:45 PM</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">9:10 PM</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Turf 2</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">3.42</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="bi bi-pencil"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                                SD
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Sarah Davis</p>
+                                                <p class="text-xs text-gray-500">Bowler</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Late</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">6:20 PM</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">9:00 PM</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">Turf 2</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800">2.67</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="bi bi-pencil"></i></button>
+                                        <button class="text-red-600 hover:text-red-800"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-3">
+                                                RP
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Robert Patel</p>
+                                                <p class="text-xs text-gray-500">Wicketkeeper</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Absent</span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-400">-</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-400">-</td>
+                                    <td class="px-4 py-3 text-sm text-gray-400">-</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-400">0.00</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <button class="text-green-600 hover:text-green-800 mr-2">Mark Present</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Attendance Summary & Payments</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <h4 class="font-medium text-gray-700 mb-2">Total Hours</h4>
+                            <div class="text-2xl font-bold">28.4</div>
+                            <p class="text-sm text-gray-500">Average: 3.16 hrs/player</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <h4 class="font-medium text-gray-700 mb-2">Turf Rate</h4>
+                            <div class="text-2xl font-bold">$120.00</div>
+                            <p class="text-sm text-gray-500">Per player: $15.00</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <h4 class="font-medium text-gray-700 mb-2">Payments Status</h4>
+                            <div class="text-2xl font-bold text-green-600">$75.00</div>
+                            <p class="text-sm text-gray-500">Pending: $45.00</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-3 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Export Report</button>
+                        <button class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Send Payment Reminders</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Team Formation Section -->
+            <div id="adminTeamsSection" class="max-w-6xl mx-auto hidden">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold">Team Formation</h2>
+                        <div class="flex space-x-2">
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option>Evening T20 Match - Nov 14, 2023</option>
+                                <option>Weekend Practice - Nov 18, 2023</option>
+                                <option>Sunday League Match - Nov 19, 2023</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="teamFormation" class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Available Players</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        JS
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">John Smith</p>
+                                        <p class="text-xs text-gray-500">All-Rounder</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 7.5</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 8.2</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        MJ
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mike Johnson</p>
+                                        <p class="text-xs text-gray-500">Batsman</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 9.0</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 5.5</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        SD
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Sarah Davis</p>
+                                        <p class="text-xs text-gray-500">Bowler</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 6.0</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 8.8</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        RP
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Robert Patel</p>
+                                        <p class="text-xs text-gray-500">Wicketkeeper</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 8.2</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 4.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        AM
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Alex Miller</p>
+                                        <p class="text-xs text-gray-500">Batsman</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 8.7</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 5.0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        VS
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Vijay Singh</p>
+                                        <p class="text-xs text-gray-500">Bowler</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 5.2</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 9.1</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        KL
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Kevin Lee</p>
+                                        <p class="text-xs text-gray-500">All-Rounder</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 7.8</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 7.5</span>
+                                </div>
+                            </div>
+                            
+                            <div class="player-card bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 mr-2">
+                                        JL
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Jessica Lee</p>
+                                        <p class="text-xs text-gray-500">Batsman</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Bat: 8.5</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full">Bowl: 6.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-semibold">Team A</h3>
+                                <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Select Captain</button>
+                            </div>
+                            <div class="team-container border border-dashed border-gray-300 rounded-lg p-3 bg-blue-50">
+                                <p class="text-gray-500 text-center my-12">Drag players here to form Team A</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-lg font-semibold">Team B</h3>
+                                <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Select Captain</button>
+                            </div>
+                            <div class="team-container border border-dashed border-gray-300 rounded-lg p-3 bg-red-50">
+                                <p class="text-gray-500 text-center my-12">Drag players here to form Team B</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center mt-6">
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 mr-3">Auto Balance Teams</button>
+                        <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Teams</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Captain Dashboard -->
+        <div id="captainDashboard" class="container mx-auto px-4 py-8 hidden">
+            <!-- Navigation -->
+            <nav class="bg-white shadow-md mb-6 rounded-lg">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center">
+                                <h1 class="text-xl font-bold text-gray-800">Captain's Dashboard</h1>
+                            </div>
+                            <div class="hidden md:ml-6 md:flex md:space-x-4">
+                                <button onclick="showCaptainSection('team')" class="captain-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">My Team</button>
+                                <button onclick="showCaptainSection('strategy')" class="captain-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Strategy</button>
+                                <button onclick="showCaptainSection('history')" class="captain-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Match History</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div id="captainName" class="mr-3 text-sm text-gray-700">Captain: John Smith</div>
+                            <button onclick="logout()" class="bg-red-600 text-white px-4 py-1 rounded-md text-sm hover:bg-red-700">Logout</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile navigation -->
+                <div class="md:hidden flex overflow-x-auto space-x-4 p-2">
+                    <button onclick="showCaptainSection('team')" class="captain-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">My Team</button>
+                    <button onclick="showCaptainSection('strategy')" class="captain-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Strategy</button>
+                    <button onclick="showCaptainSection('history')" class="captain-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Match History</button>
+                </div>
+            </nav>
+
+            <!-- Captain Team Section -->
+            <div id="captainTeamSection" class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">My Team: Blue Warriors</h2>
+                    <div class="text-sm text-gray-500">Next Match: Tuesday, Nov 14, 2023 at 6:00 PM</div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="col-span-2 bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold mb-3">Team Roster</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Player</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Batting</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Bowling</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Recent Form</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                    JS
+                                                </div>
+                                                <div class="font-medium">John Smith (C)</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">All-Rounder</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Avg: 26.2<br>SR: 142.8</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Econ: 6.7<br>Wkts: 18</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                            <div class="flex space-x-1">
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-gray-100 text-gray-800 text-xs">-</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                    MJ
+                                                </div>
+                                                <div class="font-medium">Mike Johnson</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Batsman</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Avg: 32.5<br>SR: 135.2</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Econ: 8.2<br>Wkts: 5</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                            <div class="flex space-x-1">
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                    VS
+                                                </div>
+                                                <div class="font-medium">Vijay Singh</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Bowler</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Avg: 12.4<br>SR: 110.8</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Econ: 5.8<br>Wkts: 24</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                            <div class="flex space-x-1">
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                    AM
+                                                </div>
+                                                <div class="font-medium">Alex Miller</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Batsman</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Avg: 28.6<br>SR: 145.2</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Econ: 7.9<br>Wkts: 3</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                            <div class="flex space-x-1">
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                    JL
+                                                </div>
+                                                <div class="font-medium">Jessica Lee</div>
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Batsman</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Avg: 30.2<br>SR: 152.6</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Econ: 8.5<br>Wkts: 4</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                            <div class="flex space-x-1">
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-green-100 text-green-800 text-xs">W</span>
+                                                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-red-100 text-red-800 text-xs">L</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold mb-3">Team Stats</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium mb-1">Win/Loss Record</p>
+                                <div class="bg-white rounded-lg p-2">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-xs text-gray-500">Wins: 8</span>
+                                        <span class="text-xs text-gray-500">Losses: 4</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: 67%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium mb-1">Team Batting Average</p>
+                                <div class="flex items-end">
+                                    <div class="text-2xl font-bold">24.8</div>
+                                    <span class="text-xs text-green-600 ml-2">+2.3 last 3 games</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium mb-1">Team Bowling Economy</p>
+                                <div class="flex items-end">
+                                    <div class="text-2xl font-bold">7.2</div>
+                                    <span class="text-xs text-green-600 ml-2">-0.5 last 3 games</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium mb-1">Team Strength</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="bg-white rounded p-2 text-center">
+                                        <div class="text-blue-600 mb-1"><i class="bi bi-lightning-charge"></i></div>
+                                        <p class="text-xs font-medium">Power Hitting</p>
+                                    </div>
+                                    <div class="bg-white rounded p-2 text-center">
+                                        <div class="text-blue-600 mb-1"><i class="bi bi-speedometer2"></i></div>
+                                        <p class="text-xs font-medium">Fast Bowling</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium mb-1">Areas for Improvement</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="bg-white rounded p-2 text-center">
+                                        <div class="text-red-600 mb-1"><i class="bi bi-exclamation-diamond"></i></div>
+                                        <p class="text-xs font-medium">Death Overs</p>
+                                    </div>
+                                    <div class="bg-white rounded p-2 text-center">
+                                        <div class="text-red-600 mb-1"><i class="bi bi-exclamation-diamond"></i></div>
+                                        <p class="text-xs font-medium">Running Between Wickets</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Upcoming Opponent Analysis</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="font-medium">Team: Red Dragons</h4>
+                                <p class="text-sm text-gray-500">W/L Record: 7-5</p>
+                            </div>
+                            <div>
+                                <p class="text-sm">Previous Encounter: <span class="font-medium text-green-600">Won by 15 runs</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium">Key Players to Watch:</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                    <div class="bg-white rounded p-2 flex items-center">
+                                        <div class="w-8 h-8 bg-red-200 rounded-full flex items-center justify-center text-red-700 mr-2">
+                                            AR
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-sm">Alex Rodriguez</p>
+                                            <p class="text-xs text-gray-500">Top order batsman - Avg: 42.5</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white rounded p-2 flex items-center">
+                                        <div class="w-8 h-8 bg-red-200 rounded-full flex items-center justify-center text-red-700 mr-2">
+                                            VP
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-sm">Vikram Patel</p>
+                                            <p class="text-xs text-gray-500">Medium pacer - Wkts: 18</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium">Team Strengths & Weaknesses:</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                    <div>
+                                        <p class="text-xs font-medium mb-1 text-green-600">Strengths:</p>
+                                        <ul class="text-xs text-gray-600 list-disc pl-4">
+                                            <li>Strong opening partnership</li>
+                                            <li>Quality spin bowling</li>
+                                            <li>Excellent fielding unit</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium mb-1 text-red-600">Weaknesses:</p>
+                                        <ul class="text-xs text-gray-600 list-disc pl-4">
+                                            <li>Middle order collapse tendency</li>
+                                            <li>Struggling against short balls</li>
+                                            <li>Death bowling issues</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm font-medium">Suggested Strategy:</p>
+                                <ul class="text-xs text-gray-600 list-disc pl-4 mt-2">
+                                    <li>Target their middle order with our best bowlers</li>
+                                    <li>Use short-pitched deliveries against specific batsmen</li>
+                                    <li>Be aggressive in the powerplay if batting first</li>
+                                    <li>Save Vijay's overs for the death if bowling second</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scorer Dashboard -->
+        <div id="scorerDashboard" class="container mx-auto px-4 py-8 hidden">
+            <!-- Navigation -->
+            <nav class="bg-white shadow-md mb-6 rounded-lg">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex justify-between h-16">
+                        <div class="flex">
+                            <div class="flex-shrink-0 flex items-center">
+                                <h1 class="text-xl font-bold text-gray-800">Match Scorer</h1>
+                            </div>
+                            <div class="hidden md:ml-6 md:flex md:space-x-4">
+                                <button onclick="showScorerSection('livescoring')" class="scorer-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Live Scoring</button>
+                                <button onclick="showScorerSection('history')" class="scorer-nav-btn border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Match History</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="mr-3 text-sm text-gray-700">Scorer: Admin</div>
+                            <button onclick="logout()" class="bg-red-600 text-white px-4 py-1 rounded-md text-sm hover:bg-red-700">Logout</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile navigation -->
+                <div class="md:hidden flex overflow-x-auto space-x-4 p-2">
+                    <button onclick="showScorerSection('livescoring')" class="scorer-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Live Scoring</button>
+                    <button onclick="showScorerSection('history')" class="scorer-nav-btn whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">Match History</button>
+                </div>
+            </nav>
+
+            <!-- Live Scoring Section -->
+            <div id="liveScoring" class="max-w-6xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold">Live Match Scoring</h2>
+                            <p class="text-gray-600">Blue Warriors vs Red Dragons • T20 Match • Now Playing</p>
+                        </div>
+                        <div>
+                            <select class="border border-gray-300 rounded-md px-3 py-1 text-sm">
+                                <option>Evening T20 Match - Nov 14, 2023</option>
+                                <option>Weekend Practice - Nov 18, 2023</option>
+                                <option>Sunday League Match - Nov 19, 2023</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-100 rounded-lg p-4 mb-6">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500 mb-1">Blue Warriors</p>
+                                <p class="text-3xl font-bold">86/3</p>
+                                <p class="text-sm">(9.3 overs)</p>
+                            </div>
+                            <div class="text-center border-l border-r border-gray-300">
+                                <p class="text-sm text-gray-500 mb-1">Target</p>
+                                <p class="text-3xl font-bold">-</p>
+                                <p class="text-sm">First Innings</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500 mb-1">Red Dragons</p>
+                                <p class="text-3xl font-bold">-</p>
+                                <p class="text-sm">To Bat</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Batsmen & Bowler -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Current Batsmen</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                MJ
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Mike Johnson</p>
+                                                <div class="flex items-center mt-1">
+                                                    <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                                    <span class="text-xs text-gray-500">On Strike</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between text-sm mt-2">
+                                            <div>
+                                                <p class="font-semibold text-2xl">32<span class="text-sm font-normal text-gray-500">(24)</span></p>
+                                                <p class="text-xs text-gray-500">4s: 3 • 6s: 1 • SR: 133.3</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <div class="flex items-center mb-2">
+                                            <div class="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 mr-2">
+                                                JL
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Jessica Lee</p>
+                                                <p class="text-xs text-gray-500">Non-striker</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between text-sm mt-2">
+                                            <div>
+                                                <p class="font-semibold text-2xl">18<span class="text-sm font-normal text-gray-500">(11)</span></p>
+                                                <p class="text-xs text-gray-500">4s: 2 • 6s: 1 • SR: 163.6</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-3">Current Bowler</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-8 h-8 bg-red-200 rounded-full flex items-center justify-center text-red-700 mr-3">
+                                        VP
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Vikram Patel</p>
+                                        <p class="text-xs text-gray-500">Right Arm Medium</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <p class="text-xs text-gray-500">Overs</p>
+                                        <p class="text-xl font-semibold">2.3</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Economy</p>
+                                        <p class="text-xl font-semibold">7.20</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Wickets</p>
+                                        <p class="text-xl font-semibold">1</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Runs</p>
+                                        <p class="text-xl font-semibold">18</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Current Over:</p>
+                                    <div class="flex space-x-2">
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-800 text-xs font-medium">1</span>
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-800 text-xs font-medium">0</span>
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-blue-100 text-blue-800 text-xs font-medium">4</span>
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 text-gray-800 text-xs font-medium">?</span>
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 text-gray-800 text-xs font-medium">?</span>
+                                        <span class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 text-gray-800 text-xs font-medium">?</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scoring Controls -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3">Scoring Controls</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-3">Runs</h4>
+                                <div class="grid grid-cols-7 gap-2">
+                                    <button class="bg-white border border-gray-300 rounded-lg h-12 hover:bg-gray-100">0</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg h-12 hover:bg-gray-100">1</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg h-12 hover:bg-gray-100">2</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg h-12 hover:bg-gray-100">3</button>
+                                    <button class="bg-blue-50 border border-blue-300 rounded-lg h-12 hover:bg-blue-100">4</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg h-12 hover:bg-gray-100">5</button>
+                                    <button class="bg-purple-50 border border-purple-300 rounded-lg h-12 hover:bg-purple-100">6</button>
+                                </div>
+                                
+                                <h4 class="font-medium mb-3 mt-4">Extras</h4>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Wide</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">No Ball</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Bye</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Leg Bye</button>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-3">Wicket</h4>
+                                <div class="grid grid-cols-2 gap-3 mb-3">
+                                    <select class="border border-gray-300 rounded-lg p-2 text-sm">
+                                        <option>Select Dismissal Type</option>
+                                        <option>Bowled</option>
+                                        <option>Caught</option>
+                                        <option>LBW</option>
+                                        <option>Run Out</option>
+                                        <option>Stumped</option>
+                                    </select>
+                                    <select class="border border-gray-300 rounded-lg p-2 text-sm">
+                                        <option>Select Fielder (if applicable)</option>
+                                        <option>Alex Rodriguez</option>
+                                        <option>Vikram Patel</option>
+                                        <option>Kevin Martinez</option>
+                                        <option>David Kim</option>
+                                    </select>
+                                </div>
+                                <button class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 mb-3">Add Wicket</button>
+                                
+                                <h4 class="font-medium mb-3">Other Controls</h4>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">End Over</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Switch Strike</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Change Bowler</button>
+                                    <button class="bg-white border border-gray-300 rounded-lg py-2 text-sm hover:bg-gray-100">Undo Last Action</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Innings Summary -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-semibold">Innings Summary</h3>
+                            <button class="text-sm text-blue-600 hover:text-blue-800">View Detailed Scorecard</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-white">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Batsman</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Runs</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Balls</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">4s</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">6s</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">SR</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">John Smith</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">24</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">18</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">3</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">1</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">133.3</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-red-600">b. Rodriguez</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Alex Miller</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">8</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">10</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">1</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">0</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">80.0</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-red-600">c. Kim b. Martinez</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Mike Johnson (not out)</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">32</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">24</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">3</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">1</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">133.3</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-green-600">Batting</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">Jessica Lee (not out)</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">18</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">11</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">2</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">1</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm">163.6</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-green-600">Batting</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-gray-50">
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">Extras</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium" colspan="6">4 (Wd 3, Nb 1, B 0, Lb 0)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium">Total</td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium" colspan="6">86/3 (9.3 overs) CRR: 9.05</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form Modal -->
+        <div id="bookingFormModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">New Booking</h3>
+                    <button onclick="closeBookingForm()" class="text-gray-500 hover:text-gray-700">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <form id="bookingForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Turf Selection</label>
+                        <select class="w-full rounded-md border border-gray-300 p-2">
+                            <option>Turf 1 - Main Ground</option>
+                            <option>Turf 2 - Practice Arena</option>
+                            <option>Turf 3 - Indoor Facility</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                        <input type="date" class="w-full rounded-md border border-gray-300 p-2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                            <select class="w-full rounded-md border border-gray-300 p-2">
+                                <option>6:00 AM</option>
+                                <option>7:00 AM</option>
+                                <option>8:00 AM</option>
+                                <option>9:00 AM</option>
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>12:00 PM</option>
+                                <option>1:00 PM</option>
+                                <option>2:00 PM</option>
+                                <option>3:00 PM</option>
+                                <option>4:00 PM</option>
+                                <option>5:00 PM</option>
+                                <option>6:00 PM</option>
+                                <option>7:00 PM</option>
+                                <option>8:00 PM</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                            <select class="w-full rounded-md border border-gray-300 p-2">
+                                <option>1 hour</option>
+                                <option>2 hours</option>
+                                <option>3 hours</option>
+                                <option>4 hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
+                        <select class="w-full rounded-md border border-gray-300 p-2">
+                            <option>Practice Session</option>
+                            <option>T20 Match</option>
+                            <option>Coaching Session</option>
+                            <option>Net Practice</option>
+                            <option>Friendly Match</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Expected Players</label>
+                        <input type="number" min="1" max="22" class="w-full rounded-md border border-gray-300 p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                        <textarea class="w-full rounded-md border border-gray-300 p-2" rows="2" placeholder="Any special requests or information"></textarea>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-medium mb-1">Estimated Cost:</p>
+                        <p class="text-lg font-bold">$120.00</p>
+                        <p class="text-xs text-gray-500">Per player: ~$10.00 (12 players)</p>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeBookingForm()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for demonstration
+        let users = {
+            'PLAYER001': { password: 'pass123', role: 'player', name: 'John Smith', position: 'All-Rounder' },
+            'ADMIN': { password: 'admin123', role: 'admin' },
+            'CAPTAIN001': { password: 'captain123', role: 'captain', name: 'John Smith' },
+            'SCORER001': { password: 'scorer123', role: 'scorer' }
+        };
+
+        let attendance = [];
+
+        // Login form handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const employeeId = document.getElementById('employeeId').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+
+            if (users[employeeId] && users[employeeId].password === password) {
+                document.getElementById('loginSection').classList.add('hidden');
+                if (userType === 'admin' && users[employeeId].role === 'admin') {
+                    document.getElementById('adminDashboard').classList.remove('hidden');
+                    showAdminSection('dashboard');
+                } else if (userType === 'player' && users[employeeId].role === 'player') {
+                    document.getElementById('playerDashboard').classList.remove('hidden');
+                    document.getElementById('playerName').textContent = users[employeeId].name;
+                    showPlayerSection('bookings');
+                } else if (userType === 'captain' && users[employeeId].role === 'captain') {
+                    document.getElementById('captainDashboard').classList.remove('hidden');
+                    document.getElementById('captainName').textContent = 'Captain: ' + users[employeeId].name;
+                    showCaptainSection('team');
+                } else if (userType === 'scorer' && users[employeeId].role === 'scorer') {
+                    document.getElementById('scorerDashboard').classList.remove('hidden');
+                    showScorerSection('livescoring');
+                } else {
+                    alert('Invalid user type selection!');
+                    document.getElementById('loginSection').classList.remove('hidden');
+                    return;
+                }
+            } else {
+                alert('Invalid credentials!');
+            }
+        });
+
+        // Registration form handling
+        function showRegisterForm() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registrationSection').classList.remove('hidden');
+        }
+
+        function backToLogin() {
+            document.getElementById('registrationSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const skillLevel = document.getElementById('skillLevel').value;
+            const preferredPosition = document.getElementById('preferredPosition').value;
+            
+            // Generate a player ID
+            const playerId = 'PLAYER' + Math.floor(1000 + Math.random() * 9000);
+            
+            // Add the new user to our mock data
+            users[playerId] = {
+                password: newPassword,
+                role: 'player',
+                name: fullName,
+                email: email,
+                position: preferredPosition,
+                skill: skillLevel
+            };
+            
+            alert(`Registration successful! Your Player ID is: ${playerId}`);
+            backToLogin();
+        });
+
+        // Navigation functions for different dashboards
+        function showPlayerSection(section) {
+            const sections = ['bookings', 'statistics', 'payments', 'profile'];
+            sections.forEach(s => {
+                document.getElementById(`player${s.charAt(0).toUpperCase() + s.slice(1)}Section`).classList.add('hidden');
+            });
+            document.getElementById(`player${section.charAt(0).toUpperCase() + section.slice(1)}Section`).classList.remove('hidden');
+            
+            // Update active nav button
+            document.querySelectorAll('.player-nav-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.currentTarget.classList.remove('border-transparent', 'text-gray-500');
+            event.currentTarget.classList.add('border-blue-500', 'text-blue-700');
+        }
+
+        function showAdminSection(section) {
+            // Hide all sections
+            document.getElementById('adminOverviewSection').classList.add('hidden');
+            document.getElementById('adminAttendanceSection').classList.add('hidden');
+            document.getElementById('adminTeamsSection').classList.add('hidden');
+            
+            // Show the selected section
+            if (section === 'dashboard') {
+                document.getElementById('adminOverviewSection').classList.remove('hidden');
+            } else if (section === 'attendance') {
+                document.getElementById('adminAttendanceSection').classList.remove('hidden');
+            } else if (section === 'teams') {
+                document.getElementById('adminTeamsSection').classList.remove('hidden');
+            }
+            
+            // Update active nav button
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.currentTarget.classList.remove('border-transparent', 'text-gray-500');
+            event.currentTarget.classList.add('border-blue-500', 'text-blue-700');
+        }
+
+        function showCaptainSection(section) {
+            // For now, we only have the team section implemented
+            document.querySelectorAll('.captain-nav-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.currentTarget.classList.remove('border-transparent', 'text-gray-500');
+            event.currentTarget.classList.add('border-blue-500', 'text-blue-700');
+        }
+
+        function showScorerSection(section) {
+            document.querySelectorAll('.scorer-nav-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-700');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            event.currentTarget.classList.remove('border-transparent', 'text-gray-500');
+            event.currentTarget.classList.add('border-blue-500', 'text-blue-700');
+        }
+
+        // Booking form functions
+        function showBookingForm() {
+            document.getElementById('bookingFormModal').classList.remove('hidden');
+        }
+
+        function closeBookingForm() {
+            document.getElementById('bookingFormModal').classList.add('hidden');
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Booking confirmed! You will receive a confirmation email shortly.');
+            closeBookingForm();
+        });
+
+        // Logout function
+        function logout() {
+            document.getElementById('playerDashboard').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('captainDashboard').classList.add('hidden');
+            document.getElementById('scorerDashboard').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            const bookingModal = document.getElementById('bookingFormModal');
+            if (e.target === bookingModal) {
+                closeBookingForm();
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
